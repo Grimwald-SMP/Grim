@@ -1,0 +1,10 @@
+# Directories
+logs
+keys
+assets/graphs
+
+# Files
+.env*
+package-lock.json
+*.sqlite
+__pycache__
