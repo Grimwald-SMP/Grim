@@ -15,5 +15,7 @@ class Database:
             logger.error(f"An error occured when connecting to the database: {err}")
             raise err
 
+        self.users = self.db.users
+
 
 database = Database(config.mongo_uri)
