@@ -38,7 +38,7 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
             return await ctx.edit_original_response(embed=embed)
 
         try:
-            dt = datetime.now(pytz.utc)  # Current time in UTC
+            dt = datetime.now(pytz.utc)
             loc_dt = dt.astimezone(tz)  # Convert UTC time to user's timezone
             fmt = "%H:%M:%S"
             fmt_tz = loc_dt.strftime(fmt)
@@ -83,6 +83,20 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
         )
 
         await ctx.edit_original_response(embed=embed)
+
+    @app_commands.command(name="help", description="Get help with timezones.")
+    async def set(self, ctx: Interaction):
+        embed = Embed(
+            color=config.colors["primary"],
+            title="Timezone Help",
+            description=f"\
+While timezone codes like `GMT` and `MST` \
+work, they tend to have issues. Instead, use \
+timezone identifiers in the format of `[country]/[city]`\n\
+{config.emojis['bullet']} For a list of supported timezones, view the [TZ Identifer list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones).",
+        )
+
+        await ctx.response.send_message(embed=embed)
 
 
 async def setup(bot: Bot):
