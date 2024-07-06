@@ -13,7 +13,10 @@ class Bot(AutoShardedBot):
     """Main bot class"""
 
     def __init__(self, **options) -> None:
-        super().__init__(command_prefix="nb.", intents=Intents.default(), **options)
+        intents = Intents.default()
+        intents.guild_messages = True
+        intents.message_content = True
+        super().__init__(command_prefix="g.", intents=intents, **options)
 
     async def load_extensions(self):
         """Loads all the extensions / cogs in the ./cogs folder"""

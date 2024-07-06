@@ -1,6 +1,7 @@
 # ━ Bot Values ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 bot_status: idle
 bot_activity: "Grimwald Season 19!"
+sudo_prefix: "o/ "
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ━ IDs ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -25,3 +26,8 @@ emojis:
     disabled: <:disabled:1257924176799600690>
     bullet: <:bullet:1257924175125942364>
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# ━ Blacklists ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+blacklists:
+    autoresponse_channels:
+        - 849310724844027941 # discord-to-minecraft
