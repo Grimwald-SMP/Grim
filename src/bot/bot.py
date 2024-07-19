@@ -7,6 +7,7 @@ from discord.ext.commands import AutoShardedBot
 from src.utils.logger import logger
 from src.base.config import config
 from cogwatch import watch
+from src.bot.tasks.sync import sync_roles
 
 
 class Bot(AutoShardedBot):
@@ -16,6 +17,7 @@ class Bot(AutoShardedBot):
         intents = Intents.default()
         intents.guild_messages = True
         intents.message_content = True
+        intents.members = True
         super().__init__(command_prefix="g.", intents=intents, **options)
 
     async def load_extensions(self):
@@ -55,3 +57,7 @@ class Bot(AutoShardedBot):
 
         # Finish
         logger.info("Bot is ready")
+
+        # Start tasks
+        # TODO make this more dynamic by using the same logic from cog loading
+        sync_roles.start(self)
