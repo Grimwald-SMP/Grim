@@ -1,6 +1,7 @@
 # Directories
 logs
 keys
+backups/roles/*
 assets/graphs
 
 # Files

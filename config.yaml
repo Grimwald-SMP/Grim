@@ -32,3 +32,18 @@ emojis:
 blacklists:
     autoresponse_channels:
         - 849310724844027941 # discord-to-minecraft
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# ━ Role Sync ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+role_sync_delay: 86400 # in seconds
+synced_roles:
+    new_member:
+        id: 755081553670963281
+        days: 0
+    member:
+        id: 755080871480000593
+        days: 7
+    trusted_member:
+        id: 755080215536992347
+        days: 30
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
