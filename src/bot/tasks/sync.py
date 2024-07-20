@@ -48,7 +48,7 @@ async def backup_roles(guild: Guild):
     path = os.path.join(backup_dir, name)
 
     with open(path, "w", encoding="utf8") as f:
-        json.dump(members, f, indent=4)
+        json.dump(members, f, indent=2)
 
 
 @tasks.loop(seconds=config.role_sync_delay)
