@@ -3,4 +3,6 @@ pyyaml
 pymongo
 discord
 cogwatch
+colorlog
+requests
 python-dotenv

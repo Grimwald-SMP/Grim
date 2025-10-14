@@ -1,7 +1,8 @@
 import discord
 from discord import Interaction
-from src.utils.logger import logger
+
 from src.utils.embeds import no_bot_perms_embed
+from src.utils.logger import logger
 
 
 async def create_and_delete_invite(ctx: Interaction):
@@ -13,7 +14,7 @@ async def create_and_delete_invite(ctx: Interaction):
 
     if not has_inv_perm:
         logger.debug("Bot does not have create_instant_invite permission.")
-        return await ctx.followup(embed=no_bot_perms_embed, ephemeral=True)
+        return ctx.followup(embed=no_bot_perms_embed, ephemeral=True)
 
     try:
         invites = await ctx.guild.invites()

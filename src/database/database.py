@@ -1,5 +1,6 @@
-from pymongo import MongoClient, ASCENDING
+from pymongo import MongoClient
 from pymongo.server_api import ServerApi
+
 from src.base.config import config
 from src.utils.logger import logger
 

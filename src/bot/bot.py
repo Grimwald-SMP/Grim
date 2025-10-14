@@ -1,13 +1,12 @@
-"""Parts of this code have been adapted from https://github.com/combogangreal/Example-Bot
-"""
-
 import os
+
+from cogwatch import watch
 from discord import Intents, CustomActivity
 from discord.ext.commands import AutoShardedBot
-from src.utils.logger import logger
+
 from src.base.config import config
-from cogwatch import watch
 from src.bot.tasks.sync import sync_roles
+from src.utils.logger import logger
 
 
 class Bot(AutoShardedBot):
@@ -36,7 +35,7 @@ class Bot(AutoShardedBot):
             raise Exception(f"Bot failed to startup: {e}")
 
     async def setup_hook(self) -> None:
-        """Hook for when the bot is being setup, used to load all the extensions"""
+        """Hook for when the bot is being set up, used to load all the extensions"""
         await self.load_extensions()
         await self.tree.sync()
 

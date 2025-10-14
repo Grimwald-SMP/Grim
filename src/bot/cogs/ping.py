@@ -1,5 +1,6 @@
 from discord import app_commands, Interaction, Embed
 from discord.ext.commands import Cog
+
 from src.base.config import config
 from src.bot.bot import Bot
 

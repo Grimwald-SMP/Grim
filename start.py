@@ -1,6 +1,6 @@
 import asyncio
+
 from src.bot.bot import Bot
-from src.base.config import config
 from src.utils.logger import logger
 
 bot = Bot()

@@ -1,7 +1,11 @@
-from discord import app_commands, Message, Embed
+from traceback import format_exc
+
+from discord import Message, Embed
 from discord.ext.commands import Cog
+
 from src.base.config import config
 from src.bot.bot import Bot
+from src.utils.embeds import create_error_embed
 from src.utils.logger import logger
 from src.utils.responses import (
     autoresponse_handler,
@@ -12,9 +16,6 @@ from src.utils.responses import (
     trigger_delete,
     triggers_get,
 )
-from src.utils.embeds import create_error_embed
-from traceback import format_exc
-
 
 sudo_commands = {
     "response_add": {
@@ -58,7 +59,7 @@ class Messages(Cog):
 
     @Cog.listener()
     async def on_message(self, message: Message):
-        """On message sent, run this"""
+        """On the message sent, run this"""
         content: str = message.content
 
         if content.startswith(config.sudo_prefix):

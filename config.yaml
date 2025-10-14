@@ -1,52 +1,63 @@
 # ━ Bot Values ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 bot_status: idle
-bot_activity: "Grimwald Season 19!"
+bot_activity: "Grimwald Season 21!"
 sudo_prefix: "o/ "
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ━ IDs ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 sudo_users:
-    - 1027380375028244551 # roc.py
-    - 590556755046694922 # bennyboy12306
+  - 1027380375028244551 # roc.py
+  - 590556755046694922 # bennyboy12306
 home_server: 755056745717432350 # grimwald - ofc
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ━ Colors ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 colors:
-    primary: 0xE86B11
-    secondary: 0x0F0C0A
-    invisible: 0x2B2D31
-    success: 0x00D355
-    error: 0xDF0043
+  primary: 0xE86B11
+  secondary: 0x0F0C0A
+  invisible: 0x2B2D31
+  success: 0x00D355
+  error: 0xDF0043
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ━ Emojis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 emojis:
-    network: <:network:1257924179056132116>
-    enabled: <:enabled:1257924178095378442>
-    disabled: <:disabled:1257924176799600690>
-    bullet: <:bullet:1257924175125942364>
+  network: <:network:1257924179056132116>
+  enabled: <:enabled:1257924178095378442>
+  disabled: <:disabled:1257924176799600690>
+  bullet: <:bullet:1257924175125942364>
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ━ Blacklists ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 blacklists:
-    autoresponse_channels:
-        - 849310724844027941 # discord-to-minecraft
+  autoresponse_channels:
+    - 849310724844027941 # discord-to-minecraft
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ━ Role Sync ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-role_sync_delay: 86400 # in seconds
+# id: the id of the role
+# days: the number of days the role should be synced for
+# level: the level the user needs to be to sync the role
+# extras: a list of role ids that should be synced for the role
+# days_override: the number of days the role should be synced for even if the user is not at the level
+role_sync_delay: 86400 # one day in seconds
 synced_roles:
-    new_member:
-        id: 755081553670963281
-        days: 0
-    member:
-        id: 755080871480000593
-        days: 7
-    trusted_member:
-        id: 755080215536992347
-        days: 30
-    # veteran:
-    #     id: 1264026178394521703
-    #     days: 365
+  new_member:
+    id: 755081553670963281
+    days: 0
+  member:
+    id: 755080871480000593
+    days: 7
+  trusted_member:
+    id: 755080215536992347
+    days: 30
+    level: 5
+    days_override: 183
+  veteran:
+    id: 1264026178394521703
+    days: 720
+    level: 15
+    extras:
+      - 755080215536992347 # trusted_member
+    days_override: 365
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
