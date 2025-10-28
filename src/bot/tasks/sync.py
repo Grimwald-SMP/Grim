@@ -157,6 +157,9 @@ async def update_member_roles(
 @tasks.loop(seconds=config.role_sync_delay)
 async def sync_roles(bot: AutoShardedClient) -> None:
     """Periodically sync member roles based on time in the server."""
+    if config.dev:
+        return
+
     current_member: Optional[Member] = None
 
     try:
