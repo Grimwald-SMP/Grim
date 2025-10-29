@@ -86,49 +86,55 @@ class ModTracking(Cog):
     async def check_mods(self, ctx: Interaction, version: str):
         """Check if the server's mods are updated to the given version"""
 
-        mod_list = await check_mods(version)
+        try:
+            mod_list = await check_mods(version)
 
-        lines = [f"`{'🟢' if mod['has_req_version'] else '🔴'}` {mod['latest_version']} - {mod['title']}" for mod in
-                 mod_list]
-        mods_fmt = "\n".join(lines)
+            lines = [f"`{'🟢' if mod['has_req_version'] else '🔴'}` {mod['latest_version']} - {mod['title']}" for mod in
+                     mod_list]
+            mods_fmt = "\n".join(lines)
 
-        embed = Embed(
-            color=config.colors["primary"],
-            title=f"Mod tracking for {version}",
-            description=mods_fmt,
-        )
-        embed.set_footer(text="Data pulled from Modrinth")
+            embed = Embed(
+                color=config.colors["primary"],
+                title=f"Mod tracking for {version}",
+                description=mods_fmt,
+            )
+            embed.set_footer(text="Data pulled from Modrinth", icon_url="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/publication/logo/a49f8e1b-3835-4ea1-a85b-118c6425ebc3/Modrinth_Dark_Logo.png")
 
-        await ctx.response.send_message(embed=embed)
+            await ctx.response.send_message(embed=embed)
+        except Exception as e:
+            print("An error has occurred:", e)
 
     @app_commands.command(name="check-mod", description="Check a mod on modrinth")
-    async def check_mod(self, ctx: Interaction, name: str, version: str = "1.21.6"):
+    async def check_mod(self, ctx: Interaction, name: str, version: str = config.modcheck["default_version"]):
         """Check a mod on modrinth against a version"""
 
-        async with aiohttp.ClientSession() as session:
-            mod = await search_project(session, name)
-            if mod is None:
-                return None
+        try:
+            async with aiohttp.ClientSession() as session:
+                mod = await search_project(session, name)
+                if mod is None:
+                    return None
 
-        title: str = mod["title"]
-        versions: list = mod["versions"]
-        latest_version = versions[-1]
-        has_req_version = version in versions
+            title: str = mod["title"]
+            versions: list = mod["versions"]
+            latest_version = versions[-1]
+            has_req_version = version in versions
 
-        embed = Embed(
-            title=f"`{'🟢' if has_req_version else '🔴'}` {title} - {version}",
-            description=f"""\
+            embed = Embed(
+                title=f"`{'🟢' if has_req_version else '🔴'}` {title} - {version}",
+                description=f"""\
 Latest: `{latest_version}`
 Description:
 > {mod.get("description", "none")}
 Downloads: `{mod.get("downloads", 0)}`
 """,
-            color=0x00FF00 if has_req_version else 0xFF0000,
-        )
-        embed.set_thumbnail(url=mod["icon_url"])
-        embed.set_footer(text="Data pulled from Modrinth", icon_url="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/publication/logo/a49f8e1b-3835-4ea1-a85b-118c6425ebc3/Modrinth_Dark_Logo.png")
+                color=0x00FF00 if has_req_version else 0xFF0000,
+            )
+            embed.set_thumbnail(url=mod["icon_url"])
+            embed.set_footer(text="Data pulled from Modrinth", icon_url="https://media.beehiiv.com/cdn-cgi/image/fit=scale-down,format=auto,onerror=redirect,quality=80/uploads/publication/logo/a49f8e1b-3835-4ea1-a85b-118c6425ebc3/Modrinth_Dark_Logo.png")
 
-        await ctx.response.send_message(embed=embed)
+            await ctx.response.send_message(embed=embed)
+        except Exception as e:
+            print("An error has occurred:", e)
 
 
 async def setup(bot: Bot):
