@@ -85,8 +85,6 @@ class Messages(Cog):
                 embed = Embed(description=response_msg, color=config.colors["primary"])
                 await message.channel.send(embed=embed)
 
-        autoresponse_res = await autoresponse_handler(message)
-
 
 async def setup(bot: Bot):
     await bot.add_cog(Messages(bot))

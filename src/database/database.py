@@ -17,8 +17,6 @@ class Database:
             raise err
 
         self.users = self.db.users
-        self.responses = self.db.responses
-        self.triggers = self.db.triggers
 
 
 database = Database(config.mongo_uri)
