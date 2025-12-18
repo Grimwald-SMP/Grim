@@ -7,6 +7,7 @@ from discord.ext.commands import Cog
 
 from src.base.config import config
 from src.bot.bot import Bot
+from src.utils.logger import logger
 
 modrinth_token = os.getenv("MODRINTH_TOKEN")
 BASE_MODRINTH_URL = "https://api.modrinth.com/v2/"
@@ -18,24 +19,23 @@ HEADERS = {
 MOD_NAMES = [
     "armor-poser",
     "better-multiplayer-sleep",
-    "chat-heads",
+    "bluemap",
+    "carbonchat",
     "cloth-config",
-    "dcintegration",
-    "distanthorizons",
     "fabric-api",
     "fabric-language-kotlin",
+    "fabricproxy-lite",
     "fsit",
     "invview",
     "itemswapper",
     "ledger",
     "lithium",
+    "luckperms",
     "nocreeperdamage",
-    "plan",
     "shulkerboxtooltip",
+    "signedvelocity",
     "spark",
-    "squaremap",
     "vanish",
-    "simple-voice-chat",
 ]
 
 
@@ -50,7 +50,10 @@ async def search_project(session, name: str):
     results = data.get("hits", [])
 
     match = next((hit for hit in results if hit["slug"].lower() == name.lower()), None)
-    return match or (results[0] if results else None)
+    res = match or (results[0] if results else None)
+    if res is None:
+        logger.warning(f"No results found for {name}")
+    return res
 
 
 async def check_mods(version: str, mods: list = None):
