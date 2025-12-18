@@ -60,9 +60,9 @@ synced_roles:
     days_override: 183
   veteran:
     id: 1264026178394521703
-    days: 720
+    days: 365
     level: 15
     extras:
       - 755080215536992347 # trusted_member
-    days_override: 365
+    days_override: 720
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
