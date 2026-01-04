@@ -31,6 +31,13 @@ emojis:
   enabled: <:enabled:1257924178095378442>
   disabled: <:disabled:1257924176799600690>
   bullet: <:bullet:1257924175125942364>
+  grim_bar_left: <:grim_bar_left:1457214401500287087>
+  grim_bar_mid: <:grim_bar_mid:1457214479736639611>
+  grim_bar_right: <:grim_bar_right:1457214508228415635>
+  grim_bar_left_empty: <:grim_bar_left_empty:1457218550405136394>
+  grim_bar_mid_empty: <:grim_bar_mid_empty:1457218573876334693>
+  grim_bar_right_empty: <:grim_bar_right_empty:1457218618822496287>
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ━ Blacklists ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
