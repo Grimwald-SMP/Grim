@@ -17,6 +17,10 @@ class Database:
             raise err
 
         self.users = self.db.users
+        self.votes = self.db.votes
+        self.views = self.db.views
 
 
+if config.mongo_uri is None:
+    raise ValueError("MongoDB URI is not set in the configuration.")
 database = Database(config.mongo_uri)
