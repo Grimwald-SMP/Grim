@@ -22,6 +22,25 @@ class Config:
         self.mongo_uri = os.getenv("MONGO_URI")
         self.dev = os.getenv("DEV") or False
 
+        # ===== Namespacing =====
+        # Status
+        self.bot_status = ""
+        self.bot_activity = ""
+        self.sudo_prefix = ""
+        # IDs
+        self.sudo_users = []
+        self.home_server = 0
+        # Random
+        self.default_version = "1.21.11"
+        # Colors & Emojis
+        self.colors = {}
+        self.emojis = {}
+        # Blacklists
+        self.blacklists = {}
+        # Role sync
+        self.role_sync_delay = 0
+        self.synced_roles = {}
+
         # Yaml Loading
         self.config_dict = load_config(yaml_path)
         self.namespace = SimpleNamespace(**self.config_dict)
