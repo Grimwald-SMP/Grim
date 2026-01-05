@@ -30,6 +30,8 @@ class Config:
         # IDs
         self.sudo_users = []
         self.home_server = 0
+        self.channels = {}
+        self.roles = {}
         # Random
         self.default_version = "1.21.11"
         # Colors & Emojis

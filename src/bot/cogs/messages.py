@@ -8,7 +8,6 @@ from src.bot.bot import Bot
 from src.utils.embeds import create_error_embed
 from src.utils.logger import logger
 from src.utils.responses import (
-    autoresponse_handler,
     response_add,
     response_delete,
     responses_get,
@@ -60,6 +59,9 @@ class Messages(Cog):
     @Cog.listener()
     async def on_message(self, message: Message):
         """On the message sent, run this"""
+        if message.author.bot:
+            return
+
         content: str = message.content
 
         if content.startswith(config.sudo_prefix):
@@ -84,6 +86,10 @@ class Messages(Cog):
 
                 embed = Embed(description=response_msg, color=config.colors["primary"])
                 await message.channel.send(embed=embed)
+
+        # Whitelister ping
+        if message.channel.id == config.channels["whitelist"]:
+            await message.reply(f"<@&{config.roles['whitelister']}>", mention_author=False)
 
 
 async def setup(bot: Bot):
