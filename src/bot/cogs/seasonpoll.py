@@ -1,11 +1,12 @@
 from discord import CategoryChannel, ForumChannel, app_commands, Interaction, Embed, Member
 from discord.ext.commands import Cog
 
-from src.bot.bot import Bot
 from src.base.config import config
-from src.utils.logger import logger
-from src.database.database import database
+from src.bot.bot import Bot
 from src.bot.views.seasonpoll import PollView, get_poll_embed
+from src.database.database import database
+from src.utils.checks import is_staff
+from src.utils.logger import logger
 
 
 class SeasonPoll(Cog):
@@ -22,7 +23,7 @@ class SeasonPoll(Cog):
         """Posts the new season poll."""
         if not isinstance(ctx.user, Member):
             raise ValueError("ctx.user must be of the Member type")
-        if ctx.user is None or not ctx.user.guild_permissions.administrator:
+        if not is_staff(ctx.user):
             await ctx.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
 
@@ -56,7 +57,7 @@ class SeasonPoll(Cog):
         """Lists all active season polls."""
         if not isinstance(ctx.user, Member):
             raise ValueError("ctx.user must be of the Member type")
-        if ctx.user is None or not ctx.user.guild_permissions.administrator:
+        if not is_staff(ctx.user):
             await ctx.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
 
@@ -89,12 +90,13 @@ class SeasonPoll(Cog):
         """Removes all season poll records from the database."""
         if not isinstance(ctx.user, Member):
             raise ValueError("ctx.user must be of the Member type")
-        if ctx.user is None or not ctx.user.guild_permissions.administrator:
+        if not is_staff(ctx.user):
             await ctx.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
 
         result = database.views.delete_many({"view_type": "seasonpoll"})
-        await ctx.response.send_message(f"Removed {result.deleted_count} season poll records from the database.", ephemeral=True)
+        await ctx.response.send_message(f"Removed {result.deleted_count} season poll records from the database.",
+                                        ephemeral=True)
 
     @app_commands.command(
         name="clear-seasonpoll-votes",
@@ -104,12 +106,13 @@ class SeasonPoll(Cog):
         """Clears all votes for the season poll."""
         if not isinstance(ctx.user, Member):
             raise ValueError("ctx.user must be of the Member type")
-        if ctx.user is None or not ctx.user.guild_permissions.administrator:
+        if not is_staff(ctx.user):
             await ctx.response.send_message("You do not have permission to use this command.", ephemeral=True)
             return
 
         result = database.votes.delete_many({"polltype": "seasonpoll"})
         await ctx.response.send_message(f"Cleared {result.deleted_count} votes from the season poll.", ephemeral=True)
+
 
 async def setup(bot: Bot):
     await bot.add_cog(SeasonPoll(bot))
