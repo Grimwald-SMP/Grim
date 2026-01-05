@@ -83,13 +83,19 @@ class Messages(Cog):
                 else:
                     embed = create_error_embed("Command not found.")
                     await message.channel.send(embed=embed)
+                    return
 
                 embed = Embed(description=response_msg, color=config.colors["primary"])
                 await message.channel.send(embed=embed)
+                return
 
         # Whitelister ping
         if message.channel.id == config.channels["whitelist"]:
-            await message.reply(f"<@&{config.roles['whitelister']}>", mention_author=False)
+            if message.author.get_role(config.roles["new_member"]):
+                logger.info(
+                    f"Whitelister pinged in {message.channel.name} by {message.author.name}"
+                )
+                await message.reply(f"<@&{config.roles['whitelister']}>", mention_author=False)
 
 
 async def setup(bot: Bot):
