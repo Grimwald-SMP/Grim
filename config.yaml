@@ -8,6 +8,7 @@ sudo_prefix: "o/ "
 sudo_users:
   - 1027380375028244551 # roc.py
   - 590556755046694922 # bennyboy12306
+  - 1193818043248296036 # virginmegastore._.
 home_server: 755056745717432350 # grimwald - ofc
 channels:
   whitelist: 1218226731404496977
