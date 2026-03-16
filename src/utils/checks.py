@@ -8,7 +8,7 @@ def is_staff(member: Member):
         return True
     elif member.id in config.sudo_users:
         return True
-    elif config.roles["staff"] in member.roles:
+    elif member.get_role(config.roles["staff"]) is not None:
         return True
 
     return False
