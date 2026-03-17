@@ -1,5 +1,4 @@
 from discord import Member
-from discord.ext.commands import bot
 
 from src.base.config import config
 
