@@ -1,6 +1,6 @@
 # ━ Bot Values ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 bot_status: online
-bot_activity: "Grimwald Season 21!"
+bot_activity: "Grimwald Season 22!"
 sudo_prefix: "o/ "
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -20,7 +20,7 @@ roles:
 
 # ━ random ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 modcheck:
-  default_version: "1.21.6"
+  default_version: "1.21.11"
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # ━ Colors ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
