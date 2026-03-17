@@ -181,4 +181,6 @@ def storage_to_tzinfo(stored_str: str):
     try:
         return ZoneInfo(stored_str)
     except Exception:
-        return dt_timezone.utc
+        return timez.utc
+
+
