@@ -105,26 +105,23 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
     async def set_availability(
         self,
         ctx: Interaction,
-        start_time: str,
-        end_time: str,
+        start_time: int,
+        end_time: int,
     ):
         """
         Set your availability times in your timezone.
 
         Parameters:
-        start_time: str
-            The start time of your availability in 'HH:MM' 24 hr format.
-        end_time: str
-            The end time of your availability in 'HH:MM' 24 hr format.
+        start_time: int
+            The start hour of your availability in 24 hr time (ex: 15 for 3:00pm).
+        end_time: int
+            The end hour of your availability in 24 hr time (ex: 15 for 3:00pm).
         """
 
         try:
-            start_h, start_m = map(int, start_time.split(":"))
-            end_h, end_m = map(int, end_time.split(":"))
-
-            if not (0 <= start_h < 24 and 0 <= start_m < 60):
+            if not (0 <= start_time < 24):
                 raise ValueError("Invalid start time")
-            if not (0 <= end_h < 24 and 0 <= end_m < 60):
+            if not (0 <= end_time < 24):
                 raise ValueError("Invalid end time")
 
             database.users.update_one(
@@ -132,8 +129,8 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
                 {
                     "$set": {
                         "availability": {
-                            "start_time": f"{start_h:02d}:{start_m:02d}",
-                            "end_time": f"{end_h:02d}:{end_m:02d}",
+                            "start_time": start_time,
+                            "end_time": end_time,
                         }
                     }
                 },
@@ -144,8 +141,8 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
                 color=config.colors["primary"],
                 title="Availability Set",
                 description=(
-                    f"Your availability has been set from `{start_h:02d}:{start_m:02d}` "
-                    f"to `{end_h:02d}:{end_m:02d}` in your timezone."
+                    f"Your availability has been set from `{start_time:02d}` "
+                    f"to `{end_time:02d}` in your timezone."
                 ),
             )
 
@@ -154,7 +151,7 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
         except ValueError:
             embed = Embed(
                 color=config.colors["error"],
-                description="Invalid time format. Please use 'HH:MM' in 24 hr format.",
+                description="Invalid time format. Please use 'HH' in 24 hr format.",
             )
             await ctx.response.send_message(embed=embed)
         except Exception as e:
@@ -170,32 +167,55 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
             res = database.users.find_one(
                 {"user_id": ctx.user.id, "availability": {"$exists": True}}
             )
+            if res is None:
+                embed = Embed(
+                    color=config.colors["error"],
+                    description="You haven't set your availability yet.\nUse `/timezone set-availability` to set it.",
+                )
+                return await ctx.response.send_message(embed=embed)
 
-            availability = res["availability"] if res else None
-            if not availability:
-                await ctx.response.send_message("Unable to find availability data.")
-                return
+            if res.get("availability") is None:
+                embed = Embed(
+                    color=config.colors["error"],
+                    description="You haven't set your availability yet.\nUse `/timezone set-availability` to set it.",
+                )
+                return await ctx.response.send_message(embed=embed)
 
-            def time_to_slot(t: str) -> int:
-                hour, minute = map(int, t.split(":"))
-                return hour * 2 + (1 if minute >= 30 else 0)
+            header = "---4---8---12--16--20--24"
 
-            start_slot = time_to_slot(availability["start_time"])
-            end_slot = time_to_slot(availability["end_time"])
+            # Get chart start and end positions
+            start_pos = res["availability"]["start_time"]
+            end_pos = res["availability"]["end_time"]
 
-            bar = ""
-            for slot in range(48):
-                if start_slot <= slot < end_slot:
-                    bar += "#"
-                else:
-                    bar += "-"
+            # Create a list representing the chart
+            chart_len = 24
+            chart = [" " for _ in range(chart_len)]
 
-            header = "UTC |00----04----08----12----16----20----24"
+            # Fill the chart with blocks
+            if end_pos >= start_pos: # Normal
+                for i in range(start_pos, end_pos):
+                    chart[i] = "#"
+            else: # Wrap around
+                for i in range(start_pos, chart_len):
+                    chart[i] = "#"
+                for i in range(0, end_pos):
+                    chart[i] = "#"
+
+            # Change start and end blocks
+            chart[start_pos - 1] = "+"
+            chart[end_pos - 1] = "+"
+
+            # Convert the chart list to a string
+            chart_str = "".join(chart)
 
             embed = Embed(
                 color=config.colors["primary"],
                 title="Availability Chart",
-                description=f"```\n{header}\n    |{bar}\n```",
+                description=f"""
+```
+UTC   + {header}
+{ctx.user.name:.5} | {chart_str}
+```""",
             )
 
             await ctx.response.send_message(embed=embed)
@@ -208,11 +228,13 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
 async def setup(bot: Bot):
     await bot.add_cog(Timezones(bot))
 
-
 def resolve_timezone(
     iana: str | None, utc_offset: int | None, current_time: str | None
 ):
     if iana:
+        first, second = iana.split("/")
+        iana = f"{first.capitalize()}/{second.capitalize()}"
+
         return ZoneInfo(iana)
 
     if utc_offset is not None:
