@@ -17,25 +17,30 @@ HEADERS = {
 }
 
 MOD_NAMES = [
-    "armor-poser",
-    "better-multiplayer-sleep",
+    "adventure-platform",
+    "AnvilNeverTooExpensive",
+    "ArmorPoser",
+    "BetterMultiplayerSleep",
     "bluemap",
     "carbonchat",
+    "Chunky",
     "cloth-config",
+    "entityculling",
     "fabric-api",
     "fabric-language-kotlin",
-    "fabricproxy-lite",
+    "FabricProxy-Lite",
     "fsit",
-    "invview",
+    "instamine_deepslate",
+    "InvView",
     "itemswapper",
+    "jei",
     "ledger",
     "lithium",
-    "luckperms",
-    "nocreeperdamage",
+    "LuckPerms",
+    "servux",
     "shulkerboxtooltip",
-    "signedvelocity",
     "spark",
-    "vanish",
+    "vanish"
 ]
 
 
