@@ -1,13 +1,15 @@
+import io
 from datetime import datetime, timedelta
 from datetime import timezone as timez
 from zoneinfo import ZoneInfo
 
-from discord import app_commands, Interaction, Embed, User, Member
+from discord import app_commands, Interaction, Embed, User, Member, File
 from discord.ext.commands import GroupCog
 
 from src.base.config import config
 from src.bot.bot import Bot
 from src.database.database import database
+from src.utils.availability import generate_chart
 
 
 class Timezones(GroupCog, name="timezone", description="Timezone commands"):
@@ -167,7 +169,7 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
             user2: User | None = None,
             user3: User | None = None,
             offset: int = 0,
-        ):
+    ):
         """Get a chart of user availabilities."""
 
         try:
@@ -189,7 +191,6 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
                 header_prefix = "UTC"
                 header = f"{header_prefix:<6.6} | {header}"
 
-
             embed = Embed(
                 color=config.colors["primary"],
                 title="Availability Chart",
@@ -202,12 +203,142 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
 
             await ctx.response.send_message(embed=embed)
 
+
+        except Exception as e:
+            print("An error has occurred:", e)
+
+    @app_commands.command(
+        name="better-chart", description="Get a chart of user availabilities"
+    )
+    async def better_chart(
+            self,
+            ctx: Interaction,
+            user1: User | None = None,
+            user2: User | None = None,
+            user3: User | None = None,
+            offset: int = 0,
+    ):
+        """Get a chart of user availabilities."""
+
+        try:
+            users_data = []
+
+            for user in [ctx.user, user1, user2, user3]:
+                if user is None:
+                    continue
+
+                res = database.users.find_one(
+                    {"user_id": user.id, "availability": {"$exists": True}}
+                )
+
+                if res is None or res.get("availability") is None:
+                    await ctx.response.send_message(
+                        embed=Embed(
+                            color=config.colors["error"],
+                            description=(
+                                f"{user.name} hasn't set their availability yet.\n"
+                                "Use `/timezone set-availability` to set it."
+                            ),
+                        ),
+                        ephemeral=True,
+                    )
+                    return
+
+                tz = storage_to_tzinfo(res["timezone"])
+                utc_offset = get_utc_offset(tz) + offset
+
+                start = res["availability"]["start_time"]
+                end = res["availability"]["end_time"]
+
+                users_data.append({
+                    "id": user.display_name,
+                    "free": f"{start}-{end}",
+                    "utc_offset": utc_offset,
+                })
+
+            if not users_data:
+                await ctx.response.send_message(
+                    embed=Embed(
+                        color=config.colors["error"],
+                        description="No users provided.",
+                    ),
+                    ephemeral=True,
+                )
+                return
+
+            png_bytes = generate_chart(users_data, output_path=None)
+
+            file = File(io.BytesIO(png_bytes), filename="availability.png")
+            embed = Embed(
+                color=config.colors["primary"],
+                title="Availability Chart",
+            )
+            embed.set_image(url="attachment://availability.png")
+
+            await ctx.response.send_message(file=file, embed=embed)
+
+
+        except Exception as e:
+            print("An error has occurred:", e)
+
+    @app_commands.command(
+        name="recent-chatters", description="Get the timezones of recent chatters"
+    )
+    async def recent_chatters(
+            self,
+            ctx: Interaction,
+    ):
+        """Get the timezones of recent chatters."""
+        try:
+            seen = set()
+            recent = []
+
+            async for message in ctx.channel.history(limit=200):
+                if message.author.id not in seen and not message.author.bot:
+                    seen.add(message.author.id)
+                    recent.append(message.author)
+                    if len(recent) >= 5:
+                        break
+
+            if not recent:
+                embed = Embed(
+                    color=config.colors["error"],
+                    description="No recent chatters found.",
+                )
+                return await ctx.response.send_message(embed=embed)
+
+            timezones = []
+            for user in recent:
+                res = database.users.find_one({"user_id": user.id})
+                if res is None:
+                    continue
+                tz_str = res["timezone"] if res else None
+                tz = storage_to_tzinfo(tz_str)
+                now = datetime.now(tz)
+                current_time = now.strftime("%H:%M %p")
+                timezones.append(f"`{current_time}` | {user.mention}")
+
+            if not timezones:
+                embed = Embed(
+                    color=config.colors["error"],
+                    description="No timezones found for recent chatters.",
+                )
+                return await ctx.response.send_message(embed=embed)
+
+            embed = Embed(
+                color=config.colors["primary"],
+                title="Recent Chatters",
+                description="\n".join(timezones) + f"\n-# Requested at <t:{int(datetime.now().timestamp())}:t>",
+            )
+            await ctx.response.send_message(embed=embed)
+
         except Exception as e:
             print("An error has occurred:", e)
 
 
 async def setup(bot: Bot):
     await bot.add_cog(Timezones(bot))
+
 
 async def get_user_time_chart(user: User | Member, ctx: Interaction, manual_offset: int = 0) -> str:
     res = database.users.find_one(
@@ -234,6 +365,7 @@ async def get_user_time_chart(user: User | Member, ctx: Interaction, manual_offs
     chart_str = await make_chart(end_pos, start_pos)
     return chart_str
 
+
 async def make_chart(end_pos: int, start_pos: int) -> str:
     # Create a list representing the chart
     chart_len = 24
@@ -250,21 +382,24 @@ async def make_chart(end_pos: int, start_pos: int) -> str:
             chart[i] = "#"
 
     # Change start and end blocks
-    chart[start_pos - 1] ="<"
+    chart[start_pos - 1] = "<"
     chart[end_pos - 1] = ">"
 
     # Convert the chart list to a string
     chart_str = "".join(chart)
     return chart_str
 
+
 def adjust_hour(hour: int, offset: int) -> int:
     """Adjust an hour by a given offset."""
     return (hour + offset) % 24
+
 
 def get_utc_offset(tz) -> float:
     """Get the UTC offset of a timezone."""
     offset = tz.utcoffset(datetime.now())
     return offset.total_seconds() / 3600
+
 
 def resolve_timezone(
         iana: str | None, utc_offset: int | None, current_time: str | None
