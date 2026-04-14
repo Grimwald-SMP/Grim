@@ -1,37 +1,3 @@
-"""
-availability.py  —  Discord Availability Chart Generator
-=========================================================
-
-PUBLIC API
-----------
-    generate_chart(users, output_path="availability.png") -> str
-
-    users: list of dicts with:
-        - "id":        str   — Discord user ID or display name
-        - "free":      str   — free intervals, e.g. "9-17", "1-3,5-6", "9-12 14-18"
-        - "utc_offset": int | float  (optional, default 0)  e.g. +2, -5, 5.5
-
-    Returns the output path on success.
-
-INTERVAL FORMAT (flexible)
---------------------------
-    Separators between intervals: comma or space  →  "9-17"  "1-3,5-6"  "1-3 5-6"
-    Range separator: dash                          →  "9-17"
-    Hours: integers 0–24                           →  "0-8,22-24"
-
-EXAMPLE
--------
-    from availability import generate_chart
-
-    users = [
-        {"id": "alice",   "free": "9-17",          "utc_offset":  0},
-        {"id": "bob",     "free": "1-3,5-6",        "utc_offset": +2},
-        {"id": "carlos",  "free": "10-13 15-20",    "utc_offset": -5},
-        {"id": "priya",   "free": "9-17",            "utc_offset":  5.5},
-    ]
-    generate_chart(users, "availability.png")
-"""
-
 import re
 import io
 from PIL import Image, ImageDraw, ImageFont
@@ -41,18 +7,9 @@ from PIL import Image, ImageDraw, ImageFont
 #  PARSING
 # ─────────────────────────────────────────────────────────────────
 
-def parse_intervals(free_str: str, utc_offset: float = 0) -> list[tuple[float, float]]:
-    """
-    Parse a free-time string into a list of (start_utc, end_utc) tuples.
-    Handles wrap-around (e.g. offset shifts past midnight).
 
-    Examples:
-        "9-17"           → [(9, 17)]
-        "1-3,5-6"        → [(1, 3), (5, 6)]
-        "1-3 5-6"        → [(1, 3), (5, 6)]
-        "22-2"           → [(22, 24), (0, 2)]   (overnight)
-    """
-    tokens = re.findall(r'(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)', free_str)
+def parse_intervals(free_str: str, utc_offset: float = 0) -> list[tuple[float, float]]:
+    tokens = re.findall(r"(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)", free_str)
     if not tokens:
         raise ValueError(f"No valid intervals found in: {free_str!r}")
 
@@ -62,17 +19,14 @@ def parse_intervals(free_str: str, utc_offset: float = 0) -> list[tuple[float, f
         e_local = float(e_str)
 
         if s_local < 0 or s_local > 48 or e_local < 0 or e_local > 48:
-            raise ValueError(f"Hours must be 0\u201348, got {s_local}-{e_local}")
+            raise ValueError(f"Hours must be 0-48, got {s_local}-{e_local}")
 
-        # if end <= start, treat as overnight wrap (e.g. "22-2" means 22:00 to 02:00 next day)
         if e_local <= s_local:
             e_local += 24
 
-        # shift to UTC — keep as linear range, e may exceed 24 for overnight spans
         s_utc = s_local - utc_offset
         e_utc = e_local - utc_offset
 
-        # normalise so s_utc lands in [0, 24)
         while s_utc < 0:
             s_utc += 24
             e_utc += 24
@@ -80,7 +34,7 @@ def parse_intervals(free_str: str, utc_offset: float = 0) -> list[tuple[float, f
             s_utc -= 24
             e_utc -= 24
 
-        result.append((s_utc, e_utc))   # s in [0,24); e may exceed 24 for overnight bars
+        result.append((s_utc, e_utc))
 
     return result
 
@@ -89,17 +43,18 @@ def parse_intervals(free_str: str, utc_offset: float = 0) -> list[tuple[float, f
 #  CANVAS
 # ─────────────────────────────────────────────────────────────────
 
+
 class _Canvas:
     def __init__(self, w, h, bg):
-        self.img  = Image.new("RGBA", (w, h), _hex(bg))
+        self.img = Image.new("RGBA", (w, h), _hex(bg))
         self.draw = ImageDraw.Draw(self.img, "RGBA")
         self.w, self.h = w, h
 
     def rect(self, x, y, w, h, color, radius=0, alpha=255):
         if w <= 0 or h <= 0:
             return
-        c = _hex(color, alpha)
         args = [x, y, x + w, y + h]
+        c = _hex(color, alpha)
         if radius:
             self.draw.rounded_rectangle(args, radius=radius, fill=c)
         else:
@@ -109,18 +64,20 @@ class _Canvas:
         self.draw.line([x1, y1, x2, y2], fill=_hex(color, alpha), width=width)
 
     def text(self, x, y, s, font, color, anchor="la", alpha=255):
-        self.draw.text((x, y), str(s), font=font, fill=_hex(color, alpha), anchor=anchor)
+        self.draw.text(
+            (x, y), str(s), font=font, fill=_hex(color, alpha), anchor=anchor
+        )
 
     def text_w(self, s, font):
         bb = font.getbbox(str(s))
         return bb[2] - bb[0]
 
     def save_png(self, path):
-        self.img.convert("RGB").save(path, dpi=(120, 120))
+        self.img.convert("RGB").save(path)
 
     def to_bytes(self) -> bytes:
         buf = io.BytesIO()
-        self.img.convert("RGB").save(buf, format="PNG", dpi=(120, 120))
+        self.img.convert("RGB").save(buf, format="PNG")
         return buf.getvalue()
 
 
@@ -134,9 +91,12 @@ def _hex(c, alpha=255):
 
 def _font(size, bold=False):
     candidates = [
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans{}.ttf".format("-Bold" if bold else ""),
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans{}.ttf".format(
+            "-Bold" if bold else ""
+        ),
         "/usr/share/fonts/truetype/liberation/LiberationSans-{}.ttf".format(
-            "Bold" if bold else "Regular"),
+            "Bold" if bold else "Regular"
+        ),
     ]
     for p in candidates:
         try:
@@ -146,140 +106,140 @@ def _font(size, bold=False):
     return ImageFont.load_default()
 
 
+def _fmt_offset(offset: float) -> str:
+    sign = "+" if offset >= 0 else "-"
+    abs_off = abs(offset)
+    h = int(abs_off)
+    m = int(round((abs_off - h) * 60))
+    if m:
+        return f"UTC{sign}{h}:{m:02d}"
+    return f"UTC{sign}{h}"
+
+
 # ─────────────────────────────────────────────────────────────────
-#  CHART RENDERER
+#  PALETTE
 # ─────────────────────────────────────────────────────────────────
 
-# Palette — Discord embed background + orange scheme
-_BG       = "#2B2D31"   # Discord embed background (dark mode)
-_BG2      = "#232428"   # slightly darker panel
-_ROW_ALT  = "#26282C"   # subtle alt row
-_BORDER   = "#3A3C41"   # grid lines
-_TEXT     = "#F2F3F5"   # primary text
-_DIM      = "#C8873A"   # orange-tinted dim text
-_DIMMER   = "#6B4E2A"   # muted orange
-
-_ACCENT   = "#FF8C00"   # main orange
-_OVERLAP  = "#FF6A00"   # overlap strip color
-
-_COLORS   = ["#FF8C00","#FFA63D","#E86400","#FFB347",
-             "#CC6600","#FFCF87","#FF7300","#F09000"]
+_BG = "#2B2D31"  # Discord dark mode background
+_HDR = "#232428"  # header background
+_TRACK = "#1E1F22"  # empty hour block
+_SEP = "#3A3C41"  # separator lines
+_TEXT = "#DCDDDE"  # primary text
+_MUTED = "#72767D"  # secondary text (UTC badge, ruler)
+_ACCENT = "#E87D00"  # orange - used for ALL availability blocks
 
 
-def _render(users_parsed: list[dict], output_path: str | None) -> bytes | str:
-    """
-    users_parsed: list of {"id", "intervals": [(s,e),...], "color"}
-    """
+# ─────────────────────────────────────────────────────────────────
+#  HELPERS
+# ─────────────────────────────────────────────────────────────────
+
+
+def _available_hours(intervals: list[tuple[float, float]]) -> set[int]:
+    """Return the set of hours (0-23) covered by any interval."""
+    flat = []
+    for s, e in intervals:
+        if e <= 24:
+            flat.append((s, e))
+        else:
+            flat.append((s, 24.0))
+            flat.append((0.0, e - 24.0))
+
+    hours = set()
+    for h in range(24):
+        for s, e in flat:
+            if s < h + 1 and e > h:
+                hours.add(h)
+                break
+    return hours
+
+
+# ─────────────────────────────────────────────────────────────────
+#  RENDERER
+# ─────────────────────────────────────────────────────────────────
+
+
+def _render(users_parsed: list[dict], output_path: str | None, display_offset: float = 0) -> bytes | str:
     N = len(users_parsed)
 
-    # ── layout ──────────────────────────────────────────────────
-    LABEL_W  = 220          # name column
-    PAD_L    = LABEL_W + 20
-    PAD_R    = 36
-    PAD_T    = 100          # title + hour ruler
-    PAD_B    = 36           # bottom margin
-    ROW_H    = 100          # tall rows — easy to see at Discord size
-    BAR_H    = 46           # thick bars
-    BAR_R    = 8
-    W        = 1000
-    CHART_W  = W - PAD_L - PAD_R
-    CHART_H  = N * ROW_H
-    H        = PAD_T + CHART_H + PAD_B
+    # ── Dimensions ────────────────────────────────────────────────
+    # 24 equal-width blocks across the chart area.
+    # Canvas sized for Discord embed (~460-520px display).
+    NAME_W = 110  # right edge of name column
+    CHART_X = NAME_W + 14  # = 124
+    PAD_R = 14
+    BLOCK_W = 14  # per-hour block pitch (including 2px gap)
+    BLOCK_VIS = 12  # visible block width
+    BLOCK_H = 22  # block height
+    BLOCK_R = 4  # corner radius
+    PAD_T = 46  # header (title + ruler)
+    PAD_B = 14
+    ROW_H = 46  # per-user row height
+    W = CHART_X + 24 * BLOCK_W + PAD_R  # = 124 + 336 + 14 = 474
+    CHART_H = N * ROW_H
+    H = PAD_T + CHART_H + PAD_B
 
-    F_TITLE  = _font(26, bold=True)
-    F_LABEL  = _font(24, bold=True)
-    F_RULER  = _font(26)
-    F_BAR    = _font(18, bold=True)
+    F_TITLE = _font(17, bold=True)
+    F_LABEL = _font(16, bold=True)
+    F_RULER = _font(13)
 
     cv = _Canvas(W, H, _BG)
 
-    def hx(utc_h):
-        return PAD_L + int((utc_h % 24) / 24 * CHART_W)
+    def bx(h):
+        """Left x of hour block h."""
+        return CHART_X + h * BLOCK_W
 
     def ry(i):
         return PAD_T + i * ROW_H
 
-    # ── header + footer panels ───────────────────────────────────
-    cv.rect(0, 0,         W, PAD_T,        "#222428")
-    cv.rect(0, H - PAD_B, W, PAD_B,        "#222428")
-    cv.rect(0, PAD_T - 4, W, 4,            _ACCENT)
-    cv.rect(PAD_L, PAD_T, CHART_W, CHART_H, _BG2)
+    # ── Header ────────────────────────────────────────────────────
+    cv.rect(0, 0, W, PAD_T, _HDR)
 
-    # ── alternating rows ────────────────────────────────────────
-    for i in range(N):
-        if i % 2 == 0:
-            cv.rect(PAD_L, ry(i), CHART_W, ROW_H, _ROW_ALT)
+    tz_label = _fmt_offset(display_offset)
+    cv.text(14, 16, "Availability", F_TITLE, _TEXT, anchor="lm")
+    cv.text(W - PAD_R, 16, tz_label, F_TITLE, _ACCENT, anchor="rm")
 
-    # ── hour ruler — only mark 0, 6, 12, 18 ─────────────────────
-    for h in range(0, 25):
-        x     = hx(h)
-        major = (h % 6 == 0)
-        cv.line(x, PAD_T - 28, x, PAD_T + CHART_H,
-                _ACCENT if major else _BORDER,
-                width=3 if major else 1,
-                alpha=200 if major else 60)
-        if major and h < 24:
-            cv.text(x + 5, PAD_T - 16, f"{h:02d}", F_RULER, _DIM, anchor="lm")
+    # Ruler labels at 00, 06, 12, 18 - centered above their block
+    for h in (0, 6, 12, 18):
+        cx = bx(h) + BLOCK_VIS // 2
+        cv.text(cx, PAD_T - 6, f"{h:02d}", F_RULER, _MUTED, anchor="mb")
 
-    # ── title ────────────────────────────────────────────────────
-    cv.text(20, PAD_T // 2, "Availability", F_TITLE, _TEXT, anchor="lm")
-    cv.text(W - PAD_R, PAD_T // 2, "UTC", F_TITLE, _ACCENT, anchor="rm")
+    # Header bottom border
+    cv.line(0, PAD_T, W, PAD_T, _SEP, width=1)
 
-    # ── rows ─────────────────────────────────────────────────────
+    # ── Rows ──────────────────────────────────────────────────────
     for i, p in enumerate(users_parsed):
-        y   = ry(i)
-        yc  = y + ROW_H // 2
-        col = p["color"]
+        y = ry(i)
+        yc = y + ROW_H // 2
+        block_y = yc - BLOCK_H // 2
+        avail = _available_hours(p["intervals"])
 
-        # name
-        cv.text(LABEL_W, yc, p["id"], F_LABEL, _TEXT, anchor="rm")
+        cv.text(NAME_W, yc, p["id"], F_LABEL, _TEXT, anchor="rm")
 
-        # left color accent stripe
-        cv.rect(LABEL_W + 4, y + 14, 5, ROW_H - 28, col, radius=2)
+        # 24 hour blocks
+        for h in range(24):
+            color = _ACCENT if h in avail else _TRACK
+            cv.rect(bx(h), block_y, BLOCK_VIS, BLOCK_H, color, radius=BLOCK_R)
 
-        # row divider
-        cv.line(0, y + ROW_H, W, y + ROW_H, _BORDER, alpha=60)
+        # Row separator (skip after last row)
+        if i < N - 1:
+            cv.line(0, y + ROW_H, W, y + ROW_H, _SEP, width=1)
 
-        # bars — e_utc may exceed 24 for overnight spans; draw as two segments
-        bar_y = yc - BAR_H // 2
-        for s_utc, e_utc in p["intervals"]:
-            # split into segments that fit within [0, 24]
-            segments = []
-            if e_utc <= 24:
-                segments.append((s_utc, e_utc))
-            else:
-                segments.append((s_utc, 24.0))   # segment up to midnight
-                segments.append((0.0, e_utc - 24.0))  # segment from midnight
-
-            # build a readable label from the original span
-            lbl = f"{int(s_utc):02d}-{int(e_utc % 24):02d}"
-
-            for seg_s, seg_e in segments:
-                x1 = hx(seg_s)
-                x2 = hx(seg_e)
-                bw = x2 - x1
-                if bw <= 0:
-                    continue
-                cv.rect(x1, bar_y, bw, BAR_H, col, radius=BAR_R)
-                lw = cv.text_w(lbl, F_BAR)
-                if bw > lw + 16:
-                    cv.text(x1 + bw // 2, yc, lbl, F_BAR, "#FFFFFF", anchor="mm")
-
-    # ── output ──────────────────────────────────────────────────
+    # ── Output ────────────────────────────────────────────────────
     if output_path:
         cv.save_png(output_path)
         return output_path
     return cv.to_bytes()
 
 
-
 # ─────────────────────────────────────────────────────────────────
 #  PUBLIC API
 # ─────────────────────────────────────────────────────────────────
 
+
 def generate_chart(
-        users: list[dict],
-        output_path: str | None = "availability.png",
+    users: list[dict],
+    output_path: str | None = "availability.png",
+    display_offset: float = 0,
 ) -> str | bytes:
     """
     Generate an availability chart PNG.
@@ -287,48 +247,43 @@ def generate_chart(
     Parameters
     ----------
     users : list of dicts
-        Each dict must have:
-            "id"         : str            — display name / Discord user ID
-            "free"       : str            — interval string, e.g. "9-17" or "1-3,5-6"
-        Optional:
-            "utc_offset" : int | float    — UTC offset, e.g. 2 for UTC+2 (default 0)
+        "id"         : str
+        "free"       : str   e.g. "9-17" or "1-3,5-6"
+        "utc_offset" : int | float  (optional, default 0)
 
     output_path : str | None
-        File path to save the PNG.
-        Pass None to return raw bytes instead (useful for discord.py File objects).
-
-    Returns
-    -------
-    str   — output_path if output_path was given
-    bytes — PNG bytes if output_path=None
+        File path to save, or None to return raw PNG bytes.
     """
     if not users:
         raise ValueError("users list is empty")
 
     parsed = []
     for idx, u in enumerate(users):
-        uid    = str(u["id"])
-        free   = str(u["free"])
+        uid = str(u["id"])
+        free = str(u["free"])
         offset = float(u.get("utc_offset", 0))
-        color  = _COLORS[idx % len(_COLORS)]
+        parsed.append(
+            {
+                "id": uid,
+                "intervals": parse_intervals(free, offset),
+                "utc_offset": offset,
+            }
+        )
 
-        intervals = parse_intervals(free, offset)
-        parsed.append({"id": uid, "intervals": intervals, "color": color})
-
-    return _render(parsed, output_path)
+    return _render(parsed, output_path, display_offset)
 
 
 # ─────────────────────────────────────────────────────────────────
-#  QUICK TEST  (python availability.py)
+#  QUICK TEST
 # ─────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     users = [
-        {"id": "alice",  "free": "9-17",   "utc_offset":  0},   # normal
-        {"id": "bob",    "free": "22-26",  "utc_offset":  0},   # explicit next-day hours
-        {"id": "carlos", "free": "23-3",   "utc_offset":  0},   # shorthand overnight
-        {"id": "priya",  "free": "20-28",  "utc_offset":  0},   # long overnight span
-        {"id": "james",  "free": "8-12,22-26", "utc_offset": +2}, # mixed with offset
+        {"id": "alice", "free": "9-17", "utc_offset": 0},
+        {"id": "bob", "free": "22-26", "utc_offset": 0},
+        {"id": "carlos", "free": "23-3", "utc_offset": 0},
+        {"id": "priya", "free": "20-28", "utc_offset": 0},
+        {"id": "james", "free": "8-12,22-26", "utc_offset": +2},
     ]
     out = generate_chart(users, "availability.png")
-    print(f"Saved → {out}")
+    print(f"Saved -> {out}")

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from datetime import timezone as timez
 from zoneinfo import ZoneInfo
 
-from discord import app_commands, Interaction, Embed, User, Member, File
+from discord import app_commands, Interaction, Embed, User, File
 from discord.ext.commands import GroupCog
 
 from src.base.config import config
@@ -173,54 +173,6 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
         """Get a chart of user availabilities."""
 
         try:
-            header = "1--4---8---12--16--20-23"
-
-            chart = ""
-            for user in [ctx.user, user1, user2, user3]:
-                if user:
-                    chart_str = await get_user_time_chart(user, ctx, offset)
-                    chart += f"{user.display_name:<6.6} | {chart_str}\n"
-
-            if offset > 0:
-                header_prefix = f"UTC+{offset}"
-                header = f"{header_prefix:<6.6} | {header}"
-            elif offset < 0:
-                header_prefix = f"UTC{offset}"
-                header = f"{header_prefix:<6.6} | {header}"
-            else:
-                header_prefix = "UTC"
-                header = f"{header_prefix:<6.6} | {header}"
-
-            embed = Embed(
-                color=config.colors["primary"],
-                title="Availability Chart",
-                description=f"""
-```
-{header}
-{chart}
-```""",
-            )
-
-            await ctx.response.send_message(embed=embed)
-
-
-        except Exception as e:
-            print("An error has occurred:", e)
-
-    @app_commands.command(
-        name="better-chart", description="Get a chart of user availabilities"
-    )
-    async def better_chart(
-            self,
-            ctx: Interaction,
-            user1: User | None = None,
-            user2: User | None = None,
-            user3: User | None = None,
-            offset: int = 0,
-    ):
-        """Get a chart of user availabilities."""
-
-        try:
             users_data = []
 
             for user in [ctx.user, user1, user2, user3]:
@@ -266,17 +218,13 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
                 )
                 return
 
-            png_bytes = generate_chart(users_data, output_path=None)
+            png_bytes = generate_chart(users_data, output_path=None, display_offset=offset)
 
             file = File(io.BytesIO(png_bytes), filename="availability.png")
-            embed = Embed(
-                color=config.colors["primary"],
-                title="Availability Chart",
-            )
-            embed.set_image(url="attachment://availability.png")
+            # embed = Embed(color=config.colors["primary"])
+            # embed.set_image(url="attachment://availability.png")
 
-            await ctx.response.send_message(file=file, embed=embed)
-
+            await ctx.response.send_message(file=file)
 
         except Exception as e:
             print("An error has occurred:", e)
@@ -339,60 +287,6 @@ class Timezones(GroupCog, name="timezone", description="Timezone commands"):
 async def setup(bot: Bot):
     await bot.add_cog(Timezones(bot))
 
-
-async def get_user_time_chart(user: User | Member, ctx: Interaction, manual_offset: int = 0) -> str:
-    res = database.users.find_one(
-        {"user_id": user.id, "availability": {"$exists": True}}
-    )
-    if res is None:
-        embed = Embed(
-            color=config.colors["error"],
-            description=f"{user.name} hasn't set their availability yet.\nUse `/timezone set-availability` to set it.",
-        )
-        return await ctx.response.send_message(embed=embed)
-
-    if res.get("availability") is None:
-        embed = Embed(
-            color=config.colors["error"],
-            description=f"{user.name} haven't set their availability yet.\nUse `/timezone set-availability` to set it.",
-        )
-        return await ctx.response.send_message(embed=embed)
-
-    tz = storage_to_tzinfo(res["timezone"])
-    offset = int(round(get_utc_offset(tz), 0))
-    start_pos = adjust_hour(res["availability"]["start_time"], offset + manual_offset)
-    end_pos = adjust_hour(res["availability"]["end_time"], offset + manual_offset)
-    chart_str = await make_chart(end_pos, start_pos)
-    return chart_str
-
-
-async def make_chart(end_pos: int, start_pos: int) -> str:
-    # Create a list representing the chart
-    chart_len = 24
-    chart = [" " for _ in range(chart_len)]
-
-    # Fill the chart with blocks
-    if end_pos >= start_pos:  # Normal
-        for i in range(start_pos, end_pos):
-            chart[i] = "#"
-    else:  # Wrap around
-        for i in range(start_pos, chart_len):
-            chart[i] = "#"
-        for i in range(0, end_pos):
-            chart[i] = "#"
-
-    # Change start and end blocks
-    chart[start_pos - 1] = "<"
-    chart[end_pos - 1] = ">"
-
-    # Convert the chart list to a string
-    chart_str = "".join(chart)
-    return chart_str
-
-
-def adjust_hour(hour: int, offset: int) -> int:
-    """Adjust an hour by a given offset."""
-    return (hour + offset) % 24
 
 
 def get_utc_offset(tz) -> float:
