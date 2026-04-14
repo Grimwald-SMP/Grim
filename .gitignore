@@ -3,9 +3,11 @@ logs
 keys
 backups/roles/*
 assets/graphs
+.claude
 
 # Files
 .env*
 package-lock.json
 *.sqlite
 __pycache__
+availability.png
