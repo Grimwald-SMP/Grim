@@ -59,7 +59,9 @@ blacklists:
 # level: the level the user needs to be to sync the role
 # extras: a list of role ids that should be synced for the role
 # days_override: the number of days the role should be synced for even if the user is not at the level
+# role_sync_ignore_users: user IDs that are exempt from role syncing (their roles will never be changed)
 role_sync_delay: 86400 # one day in seconds
+role_sync_ignore_users: []
 synced_roles:
   new_member:
     id: 755081553670963281

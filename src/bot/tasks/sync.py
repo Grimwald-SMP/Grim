@@ -179,6 +179,11 @@ async def sync_roles(bot: AutoShardedClient) -> None:
 
         for index, member in enumerate(members, start=1):
             current_member = member
+
+            if member.id in config.role_sync_ignore_users:
+                logger.debug(f"[{index}/{total}] {member.name} — skipped (in ignore list)")
+                continue
+
             days = calculate_days_in_server(member, now)
             level = Lurkr(guild.id).get_user_level(member.id)
 

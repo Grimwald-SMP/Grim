@@ -42,6 +42,7 @@ class Config:
         # Role sync
         self.role_sync_delay = 0
         self.synced_roles = {}
+        self.role_sync_ignore_users = []
 
         # Yaml Loading
         self.config_dict = load_config(yaml_path)
