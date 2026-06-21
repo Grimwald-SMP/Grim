@@ -6,8 +6,6 @@ from src.bot.bot import Bot
 from src.utils.rotm import rotm, EMOJI_MAP
 from src.utils.logger import logger
 
-from rich import print
-
 
 async def username_autocomplete(
     ctx: Interaction, current: str
@@ -35,7 +33,6 @@ class ROTM(GroupCog, name="rotm", description="ROTM commands"):
             await ctx.response.defer(ephemeral=False)
 
             stats = rotm.get_stats(username)
-            print(stats)
 
             # Format achievements
             achievement_data: list[dict] = stats.get("achievements", [])
